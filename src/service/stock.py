@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
-from src.model.model import Food
+from src.model.model import Food 
 
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
