@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
-from src.model.model import Diet
+from src.model.model import Diet, Food
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
 db = client["foodstock"]
@@ -15,10 +15,17 @@ router = APIRouter()
 def serialize_document(document):
     return {**document, "_id": str(document["_id"])}
 
+@router.get("/diet")
+async def get_diet():
+    diets = []
+    for doc in collection.find():
+        diets.append(serialize_document(doc))
+    return {"diets": diets}
+
 @router.get("/diet/{name}")
 async def get_diet(name: str):
     try:
-      diet = collection.find.one({"name": name})
+      diet = collection.find_one({"name": name})
       return {"diet": serialize_document(diet)}
     except:
       raise HTTPException(status_code=404, detail="Dieta no encontrada.")
@@ -66,6 +73,8 @@ def diet_check(diet: Diet):
         for meal in diet.days[day]:
             for food_dict in diet.days[day][meal]:
                 for key, food in food_dict.items():
+                    food.name = food.name.capitalize()
+
                     if (food.quantity < 0):
                         raise HTTPException(status_code=400, detail="La cantidad no puede ser negativa.")
                     
@@ -80,9 +89,10 @@ def get_total_food(days):
         for meal in days[day]:
             for food_dict in days[day][meal]:
                 for key, food in food_dict.items():
-                    existing_food = next((f for f in totalFood if f[0] == food.name), None)
+                    existing_food = next((f for f in totalFood if f["name"] == food.name), None)
                     if existing_food:
-                        existing_food[1] += food.quantity
+                        existing_food["quantity"] += food.quantity
                     else:
-                        totalFood.append([food.name, food.quantity, food.unit])
+                        new_food = Food(name=food.name, quantity=food.quantity, unit=food.unit)
+                        totalFood.append(new_food.dict())
     return totalFood

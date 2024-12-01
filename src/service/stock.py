@@ -55,6 +55,8 @@ async def update_stock(food: Food):
         raise HTTPException(status_code=404, detail="Stock no encontrado.")
     
 def stock_check(food: Food):
+    food.name = food.name.capitalize()
+
     if (food.quantity < 0):
         raise HTTPException(status_code=400, detail="La cantidad no puede ser negativa.")
     
