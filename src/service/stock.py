@@ -23,6 +23,14 @@ async def get_stock():
         stocks.append(serialize_document(doc))
     return {"stocks": stocks}
 
+@router.get("/stock/{name}")
+async def get_stock(name: str):
+    try:
+        stock = collection.find_one({"name": name})
+        return {"stock": serialize_document(stock)}
+    except:
+        raise HTTPException(status_code=404, detail="Stock no encontrado.")
+
 @router.post("/stock")
 async def add_stock(food: Food):
     try:
