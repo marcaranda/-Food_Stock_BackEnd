@@ -27,7 +27,6 @@ async def get_stock():
 async def add_stock(food: Food):
     try:
         stock_check(food)
-        totalFood = get_total_food(food.days)
         
         result = collection.insert_one(food.dict())
         if result.acknowledged:
@@ -48,7 +47,6 @@ async def delete_stock(name: str):
 @router.put("/stock")
 async def update_stock(food: Food):
     stock_check(food)
-    totalFood = get_total_food(food.days)
     
     result = collection.update_one({"name": food.name}, {"$set": food.dict()})
     if result.modified_count == 1:
@@ -60,21 +58,7 @@ def stock_check(food: Food):
     if (food.quantity < 0):
         raise HTTPException(status_code=400, detail="La cantidad no puede ser negativa.")
     
-    if (food.measure not in ["g", "u"]):
+    if (food.unit not in ["g", "u"]):
         raise HTTPException(status_code=400, detail="La medida debe ser 'g' o 'u'.")
 
     return True
-
-def get_total_food(days):
-    totalFood = []
-
-    for day in days:
-        for meal in days[day]:
-            for food in days[day][meal]:
-                if (food["name"] not in totalFood):
-                    totalFood.append([food["name"], food["quantity"], food["measure"]])
-                else:
-                    for updateFood in totalFood:
-                        if (updateFood[0] == food["name"]):
-                            updateFood[1] += food["quantity"]
-    return totalFood

@@ -4,7 +4,7 @@ from typing import List, Dict
 class Food(BaseModel):
     name: str
     quantity: int
-    measure: str
+    unit: str
 
 class Diet(BaseModel):
     name: str
