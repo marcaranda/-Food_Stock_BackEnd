@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
-from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
 from src.model.model import Food 
 

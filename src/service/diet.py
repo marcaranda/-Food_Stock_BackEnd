@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
-from pydantic import BaseModel
 from pymongo.errors import DuplicateKeyError
 from src.model.model import Diet, Food
 
@@ -61,7 +60,6 @@ async def update_diet(diet: Diet):
     
     diet_dict = diet.dict()
     diet_dict["totalFood"] = totalFood
-    result = collection.insert_one(diet_dict)
     result = collection.update_one({"name": diet.name}, {"$set": diet_dict})
     if result.modified_count == 1:
         return {"message": "Dieta actualizada."}

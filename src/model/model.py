@@ -9,3 +9,11 @@ class Food(BaseModel):
 class Diet(BaseModel):
     name: str
     days: Dict[str, Dict[str, List[Dict[str, Food]]]]
+
+class Meal(BaseModel):
+    date: str
+    meal: str
+
+class MealBD(BaseModel):
+    date: str
+    meals: List[str]
