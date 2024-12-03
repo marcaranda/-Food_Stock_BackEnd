@@ -17,7 +17,7 @@ def serialize_document(document):
 @router.get("/diet")
 async def get_diet():
     diets = []
-    for doc in collection.find():
+    for doc in collection.find().sort("order", 1):
         diets.append(serialize_document(doc))
     return {"diets": diets}
 
@@ -34,9 +34,11 @@ async def add_diet(diet: Diet):
     try:
         diet_check(diet)
         totalFood = get_total_food(diet.days)
+        order = get_diet_order()
         
         diet_dict = diet.dict()
         diet_dict["totalFood"] = totalFood
+        diet_dict["order"] = order
         result = collection.insert_one(diet_dict)
         if result.acknowledged:
             return {"message": "Dieta añadida.", "id": str(result.inserted_id)}
@@ -63,6 +65,31 @@ async def update_diet(diet: Diet):
     result = collection.update_one({"name": diet.name}, {"$set": diet_dict})
     if result.modified_count == 1:
         return {"message": "Dieta actualizada."}
+    else:
+        raise HTTPException(status_code=404, detail="Dieta no encontrada.")
+    
+@router.put("/diet/changeOrder")
+async def change_diet_order(dietName: str, newOrder: int):
+    diet = collection.find_one({"name": dietName})
+    if diet:
+        currentOrder = diet["order"]
+        print(newOrder)
+
+        if newOrder != currentOrder:
+            if newOrder > currentOrder:
+                for i in range(currentOrder + 1, newOrder + 1):
+                    collection.update_one({"order": i}, {"$inc": {"order": -1}})
+            elif newOrder < currentOrder:
+                for i in range(newOrder, currentOrder):
+                    collection.update_one({"order": i}, {"$inc": {"order": 1}})
+
+            
+            diet["order"] = newOrder
+            result = collection.update_one({"name": dietName}, {"$set": diet})
+            if result.modified_count == 1:
+                return {"message": "Orden de la dieta actualizado."}
+            else:
+                raise HTTPException(status_code=500, detail="Error al actualizar el orden de la dieta.")
     else:
         raise HTTPException(status_code=404, detail="Dieta no encontrada.")
     
@@ -94,3 +121,7 @@ def get_total_food(days):
                         new_food = Food(name=food.name, quantity=food.quantity, unit=food.unit)
                         totalFood.append(new_food.dict())
     return totalFood
+
+def get_diet_order():
+    max_order = collection.find_one({}, sort=[("order", -1)])
+    return max_order["order"] + 1 if max_order else 1
