@@ -78,28 +78,20 @@ async def update_diet(diet: Diet):
     else:
         raise HTTPException(status_code=404, detail="Dieta no encontrada.")
     
-@router.put("/diet/changeOrder")
+@router.put("/diet/changeOrder/{dietName}/{newOrder}")
 async def change_diet_order(dietName: str, newOrder: int):
     diet = collection.find_one({"name": dietName})
-    if diet:
+    diet2 = collection.find_one({"order": newOrder})
+    if diet and diet2:
         currentOrder = diet["order"]
-        print(newOrder)
 
-        if newOrder != currentOrder:
-            if newOrder > currentOrder:
-                for i in range(currentOrder + 1, newOrder + 1):
-                    collection.update_one({"order": i}, {"$inc": {"order": -1}})
-            elif newOrder < currentOrder:
-                for i in range(newOrder, currentOrder):
-                    collection.update_one({"order": i}, {"$inc": {"order": 1}})
+        result = collection.update_one({"name": dietName}, {"$set": {"order": newOrder}})
+        result2 = collection.update_one({"name": diet2["name"]}, {"$set": {"order": currentOrder}})
 
-            
-            diet["order"] = newOrder
-            result = collection.update_one({"name": dietName}, {"$set": diet})
-            if result.modified_count == 1:
-                return {"message": "Orden de la dieta actualizado."}
-            else:
-                raise HTTPException(status_code=500, detail="Error al actualizar el orden de la dieta.")
+        if result.modified_count == 1 and result2.modified_count == 1:
+            return {"message": "Orden de dieta actualizado."}
+        else:
+            raise HTTPException(status_code=500, detail="Error al actualizar el orden de la dieta.")
     else:
         raise HTTPException(status_code=404, detail="Dieta no encontrada.")
     
