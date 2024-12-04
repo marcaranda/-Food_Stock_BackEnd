@@ -12,8 +12,8 @@ class Diet(BaseModel):
 
 class Meal(BaseModel):
     date: str
-    meal: str
+    meal: Dict[str, List[Dict[str, Food]]]
 
 class MealBD(BaseModel):
     date: str
-    meals: List[str]
+    meals: List[Dict[str, List[Dict[str, Food]]]]

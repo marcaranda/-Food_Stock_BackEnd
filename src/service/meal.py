@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
-from src.model.model import Meal, MealBD
+from src.model.model import Meal, MealBD, Food
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
 db = client["foodstock"]
@@ -25,16 +25,20 @@ async def get_meal():
 async def get_meal(date: str):
     try:
         meal = collection.find_one({"date": date})
-        return {"meal": serialize_document(meal)}
+        if meal:
+            return {"meal": serialize_document(meal)}
+        else:
+            return {"meal": {"date": date, "meals": []}}
     except:
         raise HTTPException(status_code=404, detail="Comida no encontrada.")
     
 @router.put("/meal")
-async def add_meal(meal: Meal):
+async def add_meal(fullMeal: Meal):
     try:
-        meal_check(meal)
+        meal_check(fullMeal)
 
-        result = collection.update_one({"date": meal.date}, {"$addToSet": {"meals": meal.meal}}, upsert=True
+        meal_dict = fullMeal.dict(exclude={'date'})
+        result = collection.update_one({"date": fullMeal.date}, {"$addToSet": {"meals": meal_dict}}, upsert=True
         )
 
         if result.acknowledged:

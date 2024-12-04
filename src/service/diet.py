@@ -7,6 +7,7 @@ client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.l
 db = client["foodstock"]
 collection = db["diet"]
 collection.create_index("name", unique=True)
+collection.create_index("favorite", unique=True, partialFilterExpression={"favorite": True})
 
 router = APIRouter()
 
@@ -29,6 +30,14 @@ async def get_diet(name: str):
     except:
       raise HTTPException(status_code=404, detail="Dieta no encontrada.")
     
+@router.get("/diet/favorite/{bool}")
+async def get_favorite_diet(bool: bool):
+    try:
+        diet = collection.find_one({"favorite": bool})
+        return {"diet": serialize_document(diet)}
+    except:
+        raise HTTPException(status_code=404, detail="No hay ninguna dieta favorita.")
+    
 @router.post("/diet")
 async def add_diet(diet: Diet):
     try:
@@ -39,6 +48,7 @@ async def add_diet(diet: Diet):
         diet_dict = diet.dict()
         diet_dict["totalFood"] = totalFood
         diet_dict["order"] = order
+        diet_dict["favorite"] = False
         result = collection.insert_one(diet_dict)
         if result.acknowledged:
             return {"message": "Dieta añadida.", "id": str(result.inserted_id)}

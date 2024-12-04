@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException
+from googletrans import Translator
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from src.model.model import Food 
+import requests
 
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
@@ -10,6 +12,7 @@ collection = db["stock"]
 collection.create_index("name", unique=True)
 
 router = APIRouter()
+translator = Translator()
 
 # Custom serializer para ObjectId
 def serialize_document(document):
@@ -35,7 +38,9 @@ async def add_stock(food: Food):
     try:
         stock_check(food)
         
-        result = collection.insert_one(food.dict())
+        food_dict = food.dict()
+        food_dict["macros"] = await get_food_macros(food)
+        result = collection.insert_one(food_dict)
         if result.acknowledged:
             return {"message": "Alimento añadido.", "id": str(result.inserted_id)}
         else:
@@ -71,3 +76,19 @@ def stock_check(food: Food):
         raise HTTPException(status_code=400, detail="La medida debe ser 'g' o 'u'.")
 
     return True
+
+apiURl = "https://api.edamam.com/api/nutrition-data?app_id=e9fe60f1&app_key=85a5d60746f78895d03ec97e5f4e59a7&nutrition-type=logging&ingr=100g "
+async def get_food_macros(food: Food):
+    englishName = translator.translate(food.name, src='es', dest='en').text
+    
+    response = requests.get(apiURl + englishName)
+    data = response.json()
+
+    macros = {
+        "calories": f"{data['totalNutrients']['ENERC_KCAL']['quantity']} {data['totalNutrients']['ENERC_KCAL']['unit']}",
+        "carbs": f"{data['totalNutrients']['CHOCDF']['quantity']} {data['totalNutrients']['CHOCDF']['unit']}",
+        "fat": f"{data['totalNutrients']['FAT']['quantity']} {data['totalNutrients']['FAT']['unit']}",
+        "protein": f"{data['totalNutrients']['PROCNT']['quantity']} {data['totalNutrients']['PROCNT']['unit']}"
+    }
+
+    return macros
