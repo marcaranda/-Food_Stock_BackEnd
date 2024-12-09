@@ -5,6 +5,7 @@ from src.service.stock import router as stock_router
 from src.service.diet import router as diet_router
 from src.service.meal import router as meal_router
 from src.service.training import router as training_router
+from src.service.exercise import router as exercise_router
 
 app = FastAPI()
 
@@ -21,3 +22,4 @@ app.include_router(stock_router, tags=["Stock"])
 app.include_router(diet_router, tags=["Diet"])
 app.include_router(meal_router, tags=["Meal"])
 app.include_router(training_router, tags=["Training"])
+app.include_router(exercise_router, tags=["Exercise"])

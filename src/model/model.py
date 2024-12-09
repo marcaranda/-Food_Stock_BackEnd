@@ -15,10 +15,6 @@ class Meal(BaseModel):
     date: str
     meal: Dict[str, List[Dict[str, Food]]]
 
-class MealBD(BaseModel):
-    date: str
-    meals: List[Dict[str, List[Dict[str, Food]]]]
-
 class Exercise(BaseModel):
     name: str
     type: str
@@ -28,3 +24,7 @@ class Training(BaseModel):
     name: str
     days: Dict[str, Dict[str, Exercise]]
     favorite: bool
+
+class ConfirmedExercise(BaseModel):
+    date: str
+    exercise : Dict[str, Exercise]
