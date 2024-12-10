@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 class Food(BaseModel):
     name: str
@@ -18,13 +18,23 @@ class Meal(BaseModel):
 class Exercise(BaseModel):
     name: str
     type: str
-    information: str
+    information: Optional[str]
 
 class Training(BaseModel):
     name: str
     days: Dict[str, Dict[str, Exercise]]
     favorite: bool
 
+class ExerciseConfirmed(BaseModel):
+    name: str
+    type: str
+    information: Optional[str]
+    duration: Optional[str]
+    intensity: Optional[str]
+    url: Optional[str]
+
+
 class ConfirmedExercise(BaseModel):
+    trainingName: str
     date: str
-    exercise : Dict[str, Exercise]
+    exercise: Dict[str, ExerciseConfirmed]

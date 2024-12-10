@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from src.model.model import ConfirmedExercise
+import re, requests
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
 db = client["foodstock"]
@@ -33,9 +34,14 @@ async def get_confirmedExercise(date: str):
         raise HTTPException(status_code=404, detail="Ejercicio no encontrado.")
 
 @router.put("/confirmedExercise")
-async def add_confirmedExercise(fullConfirmedExercise: ConfirmedExercise):
+async def add_confirmedExercise(code: str, fullConfirmedExercise: ConfirmedExercise):
     try:
         confirmedExercise_check(fullConfirmedExercise)
+        
+        exercise_url = get_exercise_url(fullConfirmedExercise)
+        if exercise_url:
+            activity_data = get_url_data(exercise_url, code)
+            print(activity_data)
 
         confirmedExercise_dict = fullConfirmedExercise.dict(exclude={'date'})
         result = collection.update_one({"date": fullConfirmedExercise.date}, {"$addToSet": {"exercises": confirmedExercise_dict}}, upsert=True
@@ -53,3 +59,49 @@ def confirmedExercise_check(confirmedExercise):
       raise HTTPException(status_code=400, detail="Fecha no especificada.")
   if not confirmedExercise.exercise:
       raise HTTPException(status_code=400, detail="Ejercicio no especificado.")
+  
+def get_exercise_url(confirmedExercise):
+    for key, value in confirmedExercise.exercise.items():
+        if hasattr(value, 'url'):
+            url = value.url
+            return url
+    else:
+        return False
+
+def get_url_data(url, code):
+    if "strava.com" in url:
+        id = extract_strava_id(url)
+        token = get_strava_token(code)
+        
+        activity_url = f"https://www.strava.com/api/v3/activities/{id}"
+        headers = {'Authorization': f'Bearer {token}'}
+        
+        response = requests.get(activity_url, headers=headers)
+        response.raise_for_status()
+
+        return response.json()
+    
+    else:
+        return None
+
+def extract_strava_id(stravaUrl):
+    match = re.search(r"strava.com/activities/(\d+)", stravaUrl)
+    if match:
+        return match.group(1)  # Devuelve el ID de la actividad
+    else:
+        raise ValueError("URL de Strava no válida.")
+    
+def get_strava_token(code):
+    CLIENT_ID = "142165"
+    CLIENT_SECRET = "58b55e039725ca1a9d9cfcaff0e70fff0d707a00"
+
+    token_url = "https://www.strava.com/oauth/token"
+    response = requests.post(token_url, data={
+        'client_id': CLIENT_ID,
+        'client_secret': CLIENT_SECRET,
+        'code': code,
+        'grant_type': 'authorization_code'
+    })
+    
+    response.raise_for_status()
+    return response.json()['access_token']
