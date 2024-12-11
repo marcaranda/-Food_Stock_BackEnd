@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from src.model.model import ConfirmedExercise
-import re, requests
+import re, requests, json
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
 db = client["foodstock"]
@@ -41,9 +41,9 @@ async def add_confirmedExercise(code: str, fullConfirmedExercise: ConfirmedExerc
         exercise_url = get_exercise_url(fullConfirmedExercise)
         if exercise_url:
             activity_data = get_url_data(exercise_url, code)
-            print(activity_data)
 
         confirmedExercise_dict = fullConfirmedExercise.dict(exclude={'date'})
+        confirmedExercise_dict["urlData"] = activity_data
         result = collection.update_one({"date": fullConfirmedExercise.date}, {"$addToSet": {"exercises": confirmedExercise_dict}}, upsert=True
         )
 
@@ -79,7 +79,17 @@ def get_url_data(url, code):
         response = requests.get(activity_url, headers=headers)
         response.raise_for_status()
 
-        return response.json()
+        stravaJson = response.json()
+        stravaData = {
+            "name" : stravaJson["name"],
+            "distance" : stravaJson["distance"],
+            "moving_time" : stravaJson["moving_time"],
+            "id" : stravaJson["id"],
+            "start_date_local" : stravaJson["start_date_local"],
+            "calories" : stravaJson["calories"],
+        }
+
+        return stravaData
     
     else:
         return None

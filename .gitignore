@@ -2,3 +2,4 @@ src/__pycache__/main.cpython-310.pyc
 src/model/__pycache__/model.cpython-310.pyc
 src/service/__pycache__/diet.cpython-310.pyc
 src/service/__pycache__/stock.cpython-310.pyc
+strava_data.json
