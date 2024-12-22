@@ -11,9 +11,10 @@ class Diet(BaseModel):
     days: Dict[str, Dict[str, List[Dict[str, Food]]]]
     favorite: bool
 
-class Meal(BaseModel):
+class ConfirmedMeal(BaseModel):
+    dietName: str
     date: str
-    meal: Dict[str, List[Dict[str, Food]]]
+    meal: List[Dict[str, List[Dict[str, Food]]]]
 
 class Exercise(BaseModel):
     name: str
@@ -37,4 +38,4 @@ class ExerciseConfirmed(BaseModel):
 class ConfirmedExercise(BaseModel):
     trainingName: str
     date: str
-    exercise: Dict[str, ExerciseConfirmed]
+    exercise: List[Dict[str, ExerciseConfirmed]]

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
-from src.model.model import Meal
+from src.model.model import ConfirmedMeal
 
 client = MongoClient("mongodb+srv://tfgmarcaranda:foodstock@food-stock-cluster.lpjtt.mongodb.net/food_stock?retryWrites=true&w=majority&appName=food-stock-cluster")
 db = client["foodstock"]
@@ -33,7 +33,7 @@ async def get_meal(date: str):
         raise HTTPException(status_code=404, detail="Comida no encontrada.")
     
 @router.put("/meal")
-async def add_meal(fullMeal: Meal):
+async def add_meal(fullMeal: ConfirmedMeal):
     try:
         meal_check(fullMeal)
 
@@ -48,7 +48,7 @@ async def add_meal(fullMeal: Meal):
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail="Esta comida ya existe.")
     
-def meal_check(meal):
+def meal_check(ConfirmedMeal):
     if not meal.date:
         raise HTTPException(status_code=400, detail="Fecha no especificada.")
     if not meal.meal:

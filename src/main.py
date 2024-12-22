@@ -6,6 +6,7 @@ from src.service.diet import router as diet_router
 from src.service.meal import router as meal_router
 from src.service.training import router as training_router
 from src.service.exercise import router as exercise_router
+from src.service.confirmDay import router as confirmDay_router
 
 app = FastAPI()
 
@@ -23,3 +24,4 @@ app.include_router(diet_router, tags=["Diet"])
 app.include_router(meal_router, tags=["Meal"])
 app.include_router(training_router, tags=["Training"])
 app.include_router(exercise_router, tags=["Exercise"])
+app.include_router(confirmDay_router, tags=["ConfirmDay"])
